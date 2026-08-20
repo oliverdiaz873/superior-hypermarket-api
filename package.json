@@ -1,5 +1,5 @@
 {
-  "name": "backend-advanced-websites-hypermarket-express-mongodb",
+  "name": "superior-hypermarket-api",
   "version": "1.0.0",
   "description": "Backend del hypermarket con arquitectura basada en features (Feature-Based Architecture)",
   "main": "dist/server.js",
@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oliverdiaz873/backend-advanced-websites-hypermarket-express-mongodb.git"
+    "url": "git+https://github.com/oliverdiaz873/superior-hypermarket-api.git"
   },
   "keywords": [],
   "author": "",
@@ -36,9 +36,9 @@
     "node": ">=22"
   },
   "bugs": {
-    "url": "https://github.com/oliverdiaz873/backend-advanced-websites-hypermarket-express-mongodb/issues"
+    "url": "https://github.com/oliverdiaz873/superior-hypermarket-api/issues"
   },
-  "homepage": "https://github.com/oliverdiaz873/backend-advanced-websites-hypermarket-express-mongodb#readme",
+  "homepage": "https://github.com/oliverdiaz873/superior-hypermarket-api#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",
     "@aws-sdk/s3-request-presigner": "^3.1106.0",

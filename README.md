@@ -1,4 +1,4 @@
-# backend-advanced-websites-hypermarket-express-mongodb
+# superior-hypermarket-api
 
 Backend del hypermarket con Node.js + Express + TypeScript utilizando **Feature-Based Architecture**.
 
@@ -13,32 +13,32 @@ clientes y el panel administrativo.
 ```
                     Hipermercado Superior Ecosystem
 
-        backend-advanced-websites-hypermarket-express-mongodb
+        superior-hypermarket-api
                          Express REST API
-                                      |
+                                  |
         -----------------------------------------------------------------
         |                           |                            |
         |                           |                            |
-pre-advanced-websites-    pre-advanced-websites-      dashboard-websites-
-hypermarket-next          hypermarket-angular         hypermarket
+superior-hypermarket-    superior-hypermarket-      superior-hypermarket-
+storefront-next          storefront-angular         dashboard
 
    Next.js Storefront         Angular Storefront      Angular Admin Dashboard
-     (Customer App)            (Customer App)              (Admin App)
-                                      |
-                                      ▼
-                                 MongoDB
+      (Customer App)            (Customer App)              (Admin App)
+                                  |
+                                  ▼
+                             MongoDB
 
-                 hypermarket-superior-e2e (Playwright)
-                 E2E central que valida el ecosistema completo
+                  superior-hypermarket-e2e (Playwright)
+                  E2E central que valida el ecosistema completo
 ```
 
 | Repository | Type | Technology | Purpose |
 |------------|------|------------|---------|
-| backend-advanced-websites-hypermarket-express-mongodb | Backend API | Express + MongoDB + JWT | API central del sistema |
-| pre-advanced-websites-hypermarket-next | Customer Frontend | Next.js + React | Tienda pública |
-| pre-advanced-websites-hypermarket-angular | Customer Frontend | Angular | Tienda pública alternativa |
-| dashboard-websites-hypermarket | Admin Frontend | Angular + Material + NgRx Signals | Panel administrativo |
-| hypermarket-superior-e2e | E2E Harness | Playwright | Infraestructura E2E central del ecosistema |
+| superior-hypermarket-api | Backend API | Express + MongoDB + JWT | API central del sistema |
+| superior-hypermarket-storefront-next | Customer Frontend | Next.js + React | Tienda pública |
+| superior-hypermarket-storefront-angular | Customer Frontend | Angular | Tienda pública alternativa |
+| superior-hypermarket-dashboard | Admin Frontend | Angular + Material + NgRx Signals | Panel administrativo |
+| superior-hypermarket-e2e | E2E Harness | Playwright | Infraestructura E2E central del ecosistema |
 
 ### Centralized E2E Harness
 
@@ -54,9 +54,9 @@ y centralizando fixtures, helpers, configuración y specs E2E.
 
 Esta API es consumida por:
 
-- **Next.js storefront** — `pre-advanced-websites-hypermarket-next`
-- **Angular storefront** — `pre-advanced-websites-hypermarket-angular`
-- **Angular admin dashboard** — `dashboard-websites-hypermarket`
+- **Next.js storefront** — `superior-hypermarket-storefront-next`
+- **Angular storefront** — `superior-hypermarket-storefront-angular`
+- **Angular admin dashboard** — `superior-hypermarket-dashboard`
 
 ### Flujo de comunicación
 
@@ -64,7 +64,7 @@ Esta API es consumida por:
 Storefronts (Next · Angular) · Admin Dashboard
         │
         ▼
-backend-advanced-websites-hypermarket-express-mongodb (Express REST API)
+superior-hypermarket-api (Express REST API)
         │
         ▼
 MongoDB
@@ -270,15 +270,15 @@ El módulo `auth/` maneja registro, inicio de sesión y verificación de tokens 
 Esta API está diseñada para ser consumida por múltiples frontends sin depender de ninguna tecnología específica.
 
 ```
-        backend-advanced-websites-hypermarket-express-mongodb
+        superior-hypermarket-api
 
                                   |
         --------------------------------------------------------
         |                         |                            |
         ▼                         ▼                            ▼
 
-pre-advanced-websites-   pre-advanced-websites-      dashboard-websites-
-hypermarket-next         hypermarket-angular         hypermarket
+superior-hypermarket-   superior-hypermarket-      superior-hypermarket-
+storefront-next         storefront-angular         dashboard
 
 Customer Storefront      Customer Storefront        Admin Dashboard
 ```
