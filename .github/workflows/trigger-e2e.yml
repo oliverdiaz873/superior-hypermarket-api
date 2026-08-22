@@ -1,0 +1,34 @@
+name: Trigger E2E
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-e2e:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token for E2E dispatch
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.E2E_APP_ID }}
+          private-key: ${{ secrets.E2E_APP_PRIVATE_KEY }}
+          owner: oliverdiaz873
+          repositories: superior-hypermarket-e2e
+
+      - name: Dispatch E2E workflow via workflow_dispatch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api --method POST /repos/oliverdiaz873/superior-hypermarket-e2e/actions/workflows/e2e.yml/dispatches \
+            -f ref=main \
+            -f inputs[consumer_repo]=${{ github.repository }} \
+            -f inputs[head_sha]=${{ github.event.pull_request.head.sha }} \
+            -f inputs[head_ref]=${{ github.event.pull_request.head.ref }} \
+            -f inputs[pr_number]=${{ github.event.pull_request.number }}
