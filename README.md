@@ -362,3 +362,5 @@ tests/
 - Cada worker de Jest usa una base única (`test_${JEST_WORKER_ID}`) dentro del memory server, por lo que los tests de integración en paralelo no se pisan entre sí.
 - Cada suite de integración inicia con la base limpia (limpieza en `afterEach`).
 - Configuración: `jest.config.ts` (multi-proyecto, `testEnvironment: node`, `detectOpenHandles`) y `tsconfig.test.json`.
+
+<!-- test(e2e): validate PR head SHA dispatch - test/e2e-head-sha -->
