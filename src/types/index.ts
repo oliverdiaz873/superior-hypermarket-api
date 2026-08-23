@@ -80,6 +80,7 @@ export interface Config {
   backupDir: string;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
+  e2eDisableAuthRateLimit: boolean;
   storageProvider: "local" | "s3";
   storageLocalDir: string;
   storagePublicBaseUrl: string;

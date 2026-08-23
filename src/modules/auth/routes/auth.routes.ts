@@ -3,6 +3,7 @@ import * as authController from "../controllers/auth.controller";
 import authMiddleware from "../../../shared/middleware/auth.middleware";
 import { rateLimit } from "../../../shared/middleware/rate-limit.middleware";
 import { validateRequiredFields } from "../../../shared/middleware/validation.middleware";
+import config from "../../../config";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ const registerRateLimit = rateLimit({
 const authRateLimit =
   (limiter: (req: Request, res: Response, next: NextFunction) => void) =>
   (req: Request, res: Response, next: NextFunction): void => {
+    if (config.e2eDisableAuthRateLimit) return next();
     limiter(req, res, next);
   };
 

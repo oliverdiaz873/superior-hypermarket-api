@@ -25,6 +25,7 @@ const config: Config = {
   backupDir: process.env.BACKUP_DIR || "backups",
   rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60_000,
   rateLimitMaxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 300,
+  e2eDisableAuthRateLimit: process.env.E2E_DISABLE_AUTH_RATE_LIMIT === "true",
   storageProvider,
   storageLocalDir: process.env.STORAGE_LOCAL_DIR || path.resolve(process.cwd(), "storage"),
   storagePublicBaseUrl: process.env.STORAGE_PUBLIC_BASE_URL || `http://localhost:${Number(process.env.PORT) || 3000}`,
