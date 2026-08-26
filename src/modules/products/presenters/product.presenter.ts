@@ -79,7 +79,21 @@ const resolvePublicImage = (product: Product): string | null => {
       return null;
     }
   }
-  return product.image ?? null;
+  if (product.image) {
+    const isLegacyKey =
+      product.image.startsWith("products/") || product.image.startsWith("/products/");
+    if (isLegacyKey) {
+      const key = product.image.startsWith("/") ? product.image.slice(1) : product.image;
+      try {
+        return cacheBust(getStorageProvider().getPublicUrl(key), product.updatedAt);
+      } catch {
+        logger.warn("Failed to resolve legacy image URL", { image: product.image });
+        return null;
+      }
+    }
+    return product.image;
+  }
+  return null;
 };
 
 const resolveTranslatedName = (product: Product, lang?: Lang): string =>
