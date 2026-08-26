@@ -261,3 +261,54 @@ describe("E2E: visibilidad pública de productos (F1)", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("E2E: filtrado de productos por categoría y subcategoría", () => {
+  it("GET /api/products?category=<slug> responde correctamente para categoría padre y subcategoría", async () => {
+    const p1 = await createTestProduct({
+      name: "Producto Padre Directo",
+      status: "active",
+      isAvailable: true,
+      category: { name: "Alimentos", slug: "alimentos" },
+      subcategory: null,
+    });
+
+    const p2 = await createTestProduct({
+      name: "Producto Subcategoría Bebidas",
+      status: "active",
+      isAvailable: true,
+      category: { name: "Alimentos", slug: "alimentos" },
+      subcategory: { name: "Bebidas", slug: "bebidas" },
+    });
+
+    const p3 = await createTestProduct({
+      name: "Producto Subcategoría Lácteos",
+      status: "active",
+      isAvailable: true,
+      category: { name: "Alimentos", slug: "alimentos" },
+      subcategory: { name: "Lácteos", slug: "lacteos" },
+    });
+
+    // 1. Consulta categoría padre -> debe devolver directos + subcategorías
+    const resParent = await request(app).get("/api/products?category=alimentos");
+    expect(resParent.status).toBe(200);
+    const parentIds = resParent.body.data.map((p: { id: string }) => p.id);
+    expect(parentIds).toContain(p1.id);
+    expect(parentIds).toContain(p2.id);
+    expect(parentIds).toContain(p3.id);
+
+    // 2. Consulta subcategoría bebidas -> solo debe devolver bebidas
+    const resBebidas = await request(app).get("/api/products?category=bebidas");
+    expect(resBebidas.status).toBe(200);
+    const bebidasIds = resBebidas.body.data.map((p: { id: string }) => p.id);
+    expect(bebidasIds).toContain(p2.id);
+    expect(bebidasIds).not.toContain(p1.id);
+    expect(bebidasIds).not.toContain(p3.id);
+
+    // 3. Consulta subcategoría lácteos -> solo debe devolver lácteos
+    const resLacteos = await request(app).get("/api/products?category=lacteos");
+    expect(resLacteos.status).toBe(200);
+    const lacteosIds = resLacteos.body.data.map((p: { id: string }) => p.id);
+    expect(lacteosIds).toContain(p3.id);
+    expect(lacteosIds).not.toContain(p2.id);
+  });
+});

@@ -25,7 +25,10 @@ export const findPage = async (query: ProductQuery): Promise<ProductPageResult> 
   const { page, limit, q, category, categoryId, subcategoryId, brand, status, isAvailable, featured, sortBy, sortOrder } = query;
 
   const filter: Record<string, unknown> = {};
-  if (category) filter["category.slug"] = category.trim().toLowerCase();
+  if (category) {
+    const slug = category.trim().toLowerCase();
+    filter.$or = [{ "category.slug": slug }, { "subcategory.slug": slug }];
+  }
   if (categoryId) filter.categoryId = categoryId.trim();
   if (subcategoryId) filter.subcategoryId = subcategoryId.trim();
   if (brand) filter["brand.slug"] = brand.trim().toLowerCase();
@@ -134,7 +137,10 @@ export const restoreById = async (id: string): Promise<boolean> => {
 export const search = async (query: string, category?: string): Promise<Product[]> => {
   const term = query.trim();
   const filters: Record<string, unknown> = { status: "active", isAvailable: true };
-  if (category) filters["category.slug"] = category.trim().toLowerCase();
+  if (category) {
+    const slug = category.trim().toLowerCase();
+    filters.$or = [{ "category.slug": slug }, { "subcategory.slug": slug }];
+  }
 
   if (term.split(/\s+/).length > 1) {
     const docs = await ProductModel.find({ $text: { $search: term }, ...filters }).sort({
