@@ -7,7 +7,7 @@ export interface TaxonomyEntry {
 }
 
 export interface ProductSnapshot {
-  _id: any;
+  _id: string | import("mongodb").ObjectId;
   name?: string;
   categoryId?: string;
   subcategoryId?: string | null;
@@ -57,8 +57,9 @@ const migration: Migration = {
       const matchingEntries = taxonomyMap.get(currentCategorySlug) ?? [];
       if (matchingEntries.length === 1 && !product.subcategory?.slug) {
         const entry = matchingEntries[0];
+        const filter = { _id: product._id } as import("mongodb").Filter<import("mongodb").Document>;
         await productsCollection.updateOne(
-          { _id: product._id },
+          filter,
           {
             $set: {
               categoryId: entry.parent.id,
@@ -82,8 +83,9 @@ const migration: Migration = {
         const matchingEntries = taxonomyMap.get(subSlug) ?? [];
         if (matchingEntries.length === 1) {
           const entry = matchingEntries[0];
+          const filter = { _id: product._id } as import("mongodb").Filter<import("mongodb").Document>;
           await productsCollection.updateOne(
-            { _id: product._id },
+            filter,
             {
               $set: {
                 categoryId: subSlug,
