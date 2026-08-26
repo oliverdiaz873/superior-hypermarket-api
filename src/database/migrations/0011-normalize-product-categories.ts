@@ -58,17 +58,14 @@ const migration: Migration = {
       if (matchingEntries.length === 1 && !product.subcategory?.slug) {
         const entry = matchingEntries[0];
         const filter = { _id: product._id } as import("mongodb").Filter<import("mongodb").Document>;
-        await productsCollection.updateOne(
-          filter,
-          {
-            $set: {
-              categoryId: entry.parent.id,
-              subcategoryId: entry.subcategory.slug,
-              category: { name: entry.parent.name, slug: entry.parent.slug },
-              subcategory: { name: entry.subcategory.name, slug: entry.subcategory.slug },
-            },
-          }
-        );
+        await productsCollection.updateOne(filter, {
+          $set: {
+            categoryId: entry.parent.id,
+            subcategoryId: entry.subcategory.slug,
+            category: { name: entry.parent.name, slug: entry.parent.slug },
+            subcategory: { name: entry.subcategory.name, slug: entry.subcategory.slug },
+          },
+        });
       }
     }
   },
@@ -83,18 +80,17 @@ const migration: Migration = {
         const matchingEntries = taxonomyMap.get(subSlug) ?? [];
         if (matchingEntries.length === 1) {
           const entry = matchingEntries[0];
-          const filter = { _id: product._id } as import("mongodb").Filter<import("mongodb").Document>;
-          await productsCollection.updateOne(
-            filter,
-            {
-              $set: {
-                categoryId: subSlug,
-                subcategoryId: null,
-                category: { name: entry.subcategory.name, slug: subSlug },
-                subcategory: null,
-              },
-            }
-          );
+          const filter = { _id: product._id } as import("mongodb").Filter<
+            import("mongodb").Document
+          >;
+          await productsCollection.updateOne(filter, {
+            $set: {
+              categoryId: subSlug,
+              subcategoryId: null,
+              category: { name: entry.subcategory.name, slug: subSlug },
+              subcategory: null,
+            },
+          });
         }
       }
     }
