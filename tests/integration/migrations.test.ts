@@ -5,6 +5,7 @@ import migration1 from "../../src/database/migrations/0001-create-indexes";
 import migration2 from "../../src/database/migrations/0002-add-fields";
 import migration7 from "../../src/database/migrations/0007-add-product-featured";
 import migration8 from "../../src/database/migrations/0008-set-featured-products";
+import migration11 from "../../src/database/migrations/0011-normalize-product-categories";
 
 describe("migraciones", () => {
   let id: ObjectId;
@@ -119,6 +120,47 @@ describe("migraciones", () => {
         expect(doc?.featured).toBe(false);
       }
       expect(await products.countDocuments({ featured: true })).toBe(0);
+    });
+  });
+
+  describe("0011-normalize-product-categories", () => {
+    it("up normaliza productos con slug de subcategoría en category.slug y down los revierte", async () => {
+      const db = mongoose.connection.db!;
+      const categories = db.collection("categories");
+      const products = db.collection("products");
+
+      const catId = new ObjectId();
+      await categories.insertOne({
+        _id: catId,
+        name: "Alimentos",
+        slug: "alimentos",
+        subcategories: [{ name: "Bebidas", slug: "bebidas" }],
+      });
+
+      const prodId = new ObjectId();
+      await products.insertOne({
+        _id: prodId,
+        name: "Jugo de Naranja",
+        categoryId: "bebidas",
+        category: { name: "Bebidas", slug: "bebidas" },
+      });
+
+      await migration11.up(db);
+      await migration11.up(db); // Test idempotency
+
+      const normalized = await products.findOne({ _id: prodId });
+      expect(normalized?.categoryId).toBe(String(catId));
+      expect(normalized?.subcategoryId).toBe("bebidas");
+      expect(normalized?.category).toEqual({ name: "Alimentos", slug: "alimentos" });
+      expect(normalized?.subcategory).toEqual({ name: "Bebidas", slug: "bebidas" });
+
+      await migration11.down(db);
+
+      const reverted = await products.findOne({ _id: prodId });
+      expect(reverted?.categoryId).toBe("bebidas");
+      expect(reverted?.subcategoryId).toBeNull();
+      expect(reverted?.category).toEqual({ name: "Bebidas", slug: "bebidas" });
+      expect(reverted?.subcategory).toBeNull();
     });
   });
 });
