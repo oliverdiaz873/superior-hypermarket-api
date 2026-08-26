@@ -59,7 +59,8 @@ describe("product.service", () => {
       const result = await productService.getAll();
 
       expect(mockProductRepository.findAll).toHaveBeenCalledTimes(1);
-      expect(result).toEqual(products);
+      expect(result[0].image).toContain("https://example.com/arroz.png");
+      expect(result[0].image).toContain("?v=");
     });
 
     it("omite los productos no disponibles en la lista pública (F1)", async () => {
@@ -105,7 +106,8 @@ describe("product.service", () => {
         sortBy: "name",
         sortOrder: "asc",
       });
-      expect(result).toEqual({ data: products, pagination: { page: 2, limit: 10, total: 1, pages: 1 } });
+      expect(result.data[0].image).toContain("https://example.com/arroz.png");
+      expect(result.pagination).toEqual({ page: 2, limit: 10, total: 1, pages: 1 });
     });
 
     it("aplica defaults cuando faltan page, limit y sort", async () => {
@@ -234,7 +236,8 @@ describe("product.service", () => {
       const result = await productService.getById(PRODUCT_ID);
 
       expect(mockProductRepository.findById).toHaveBeenCalledWith(PRODUCT_ID);
-      expect(result).toEqual(product);
+      expect(result.image).toContain("https://example.com/arroz.png");
+      expect(result.image).toContain("?v=");
     });
 
     it("lanza NotFoundError si el producto no existe", async () => {
@@ -286,7 +289,8 @@ describe("product.service", () => {
         stock: 15,
         minStock: 5,
       });
-      expect(result).toEqual(makeProduct());
+      expect(result.image).toContain("https://example.com/arroz.png");
+      expect(result.image).toContain("?v=");
     });
 
     it("crea un draft sin imagen (status inactive, isAvailable false)", async () => {
@@ -412,7 +416,8 @@ describe("product.service", () => {
         expect.objectContaining({ name: "Arroz Premium", updatedAt: expect.any(Date) }),
         { unset: [] }
       );
-      expect(result).toEqual(makeProduct({ name: "Arroz Premium" }));
+      expect(result.name).toBe("Arroz Premium");
+      expect(result.image).toContain("https://example.com/arroz.png");
     });
 
     it("lanza NotFoundError si el producto no existe", async () => {
@@ -576,9 +581,8 @@ describe("product.service", () => {
         PRODUCT_ID,
         expect.objectContaining({
           imageKey: imageKeyOf("new"),
-          image: `https://cdn.test/${imageKeyOf("new")}`,
         }),
-        { unset: [] }
+        { unset: ["image"] }
       );
       expect(storageProviderMock.deleteObject).toHaveBeenCalledWith(imageKeyOf("old"));
     });

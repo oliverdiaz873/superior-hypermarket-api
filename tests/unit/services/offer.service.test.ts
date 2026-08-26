@@ -36,7 +36,7 @@ describe("offer.service", () => {
           originalPrice: 100,
           discountPrice: 80,
           discountPercentage: 20,
-          image: "https://example.com/arroz.png",
+          image: expect.stringContaining("https://example.com/arroz.png"),
           categoryId: "64b0000000000000000000c1",
         }),
       ]);

@@ -231,7 +231,8 @@ const applyImageKey = async (
   }
 
   updates.imageKey = imageKey;
-  updates.image = provider.getPublicUrl(imageKey);
+  // image no se persiste: se deriva en presenter via getPublicUrl(imageKey)
+  // Si había una URL antigua persistida, se limpiará en performUpdate via $unset
 
   return product.imageKey && product.imageKey !== imageKey ? product.imageKey : undefined;
 };
@@ -293,14 +294,15 @@ const performUpdate = async (id: string, data: UpdateProductInput, actorId?: str
         unset.push("image", "imageKey", "imageThumbnailKey");
       } else {
         if (data.image !== undefined) {
-          if (typeof data.image !== "string" || !data.image.trim()) {
-            throw new InvalidDataError("Image cannot be empty");
-          }
-          updates.image = data.image;
+          // image directa ya no se persiste (contrato limpio: solo imageKey)
+          // Se limpia cualquier image antigua persistida
+          unset.push("image");
         }
 
         if (data.imageKey !== undefined) {
           replacedImageKey = await applyImageKey(existing, data.imageKey, updates);
+          // image derivada, no persistida
+          unset.push("image");
         }
         if (data.imageThumbnailKey !== undefined) {
           const thumbnailKey = data.imageThumbnailKey;

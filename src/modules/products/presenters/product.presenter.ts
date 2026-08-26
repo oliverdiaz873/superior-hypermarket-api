@@ -79,19 +79,13 @@ const resolvePublicImage = (product: Product): string | null => {
       return null;
     }
   }
-  if (product.image) {
-    const isLegacyKey =
-      product.image.startsWith("products/") || product.image.startsWith("/products/");
-    if (isLegacyKey) {
-      const key = product.image.startsWith("/") ? product.image.slice(1) : product.image;
-      try {
-        return cacheBust(getStorageProvider().getPublicUrl(key), product.updatedAt);
-      } catch {
-        logger.warn("Failed to resolve legacy image URL", { image: product.image });
-        return null;
-      }
+  // Tras 0012, image ya no se persiste como key; si existe y es URL pública, se retorna
+  if (product.image && (product.image.startsWith("/uploads/") || product.image.startsWith("http"))) {
+    try {
+      return cacheBust(product.image, product.updatedAt);
+    } catch {
+      return product.image;
     }
-    return product.image;
   }
   return null;
 };
