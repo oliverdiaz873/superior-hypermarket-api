@@ -1,5 +1,4 @@
-import { getStorageProvider } from "../../../shared/storage/storage.factory";
-import { logger } from "../../../shared/logger/logger";
+import { resolveProductImageUrl } from "../../../shared/utils/resolve-product-image";
 import type { Product, ProductStatus } from "../../../types";
 
 export type Lang = "es" | "en" | undefined;
@@ -64,31 +63,7 @@ export const normalizeLang = (lang: unknown): Lang => (lang === "es" || lang ===
 export const isPubliclyVisible = (product: Product): boolean =>
   product.status === "active" && product.isAvailable === true;
 
-const cacheBust = (url: string, version?: Date): string => {
-  if (!version) return url;
-  const prefix = url.includes("?") ? "&" : "?";
-  return `${url}${prefix}v=${encodeURIComponent(version.toISOString())}`;
-};
-
-const resolvePublicImage = (product: Product): string | null => {
-  if (product.imageKey) {
-    try {
-      return cacheBust(getStorageProvider().getPublicUrl(product.imageKey), product.updatedAt);
-    } catch {
-      logger.warn("Failed to resolve public image URL", { imageKey: product.imageKey });
-      return null;
-    }
-  }
-  // Tras 0012, image ya no se persiste como key; si existe y es URL pública, se retorna
-  if (product.image && (product.image.startsWith("/uploads/") || product.image.startsWith("http"))) {
-    try {
-      return cacheBust(product.image, product.updatedAt);
-    } catch {
-      return product.image;
-    }
-  }
-  return null;
-};
+const resolvePublicImage = (product: Product): string | null => resolveProductImageUrl(product);
 
 const resolveTranslatedName = (product: Product, lang?: Lang): string =>
   lang && product.translations?.[lang]?.name ? product.translations[lang].name : product.name;

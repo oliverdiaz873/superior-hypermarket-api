@@ -60,12 +60,13 @@ Reglas:
 
 ## 4. Contrato de imagen (campos de producto)
 
-| Campo | Tipo | Responsabilidad |
-| --- | --- | --- |
-| `image` | string (URL) | URL pública (CDN) con `?v={updatedAt}`. La consumen Angular Store y Next.js. |
-| `imageKey` | string | Clave del objeto en storage (`products/{id}/{uuid}.{ext}`). Solo backend: reemplazo/eliminación. |
-| `imageThumbnailKey` | string? | Clave de la miniatura (opcional, generada client-side en F2). |
+| Campo | Tipo | Dónde vive | Responsabilidad |
+| --- | --- | --- | --- |
+| `imageKey` | string | **MongoDB** (única fuente de verdad persistida) | Clave del objeto en storage (`products/{id}/{uuid}.{ext}`). Solo backend: reemplazo/eliminación. Desde `0012-normalize-product-image-key` es la única columna persistida para la imagen. |
+| `image` | string (URL) \| null | **Derivado en runtime** (no se persiste) | URL pública (CDN) con `?v={updatedAt}` resuelta vía `src/shared/utils/resolve-product-image.ts` (`storageProvider.getPublicUrl(imageKey)` + `cacheBust`). La consumen Angular Store, Next.js, Cart y Orders. `imageKey` es la fuente; `product.image` legacy solo se usa como fallback si ya es URL pública (`/uploads/...` o `http...`). |
+| `imageThumbnailKey` | string? | MongoDB | Clave de la miniatura (opcional, generada client-side en F2). |
 
+- **Derivación:** `image` **no se persiste** desde `0012`. El presenter y los servicios Cart/Orders resuelven `imageKey` con `resolveProductImageUrl(product)`; nunca leer `product.image` como fuente principal. Ver `src/database/migrations/0012-normalize-product-image-key.ts`.
 - **Cache-busting:** la URL pública de `image` se sirve con `?v={updatedAt}` para
   evitar servir cache vieja tras un reemplazo. `Cache-Control: public,
   max-age=31536000, immutable` como metadata del objeto.
@@ -88,9 +89,9 @@ Reglas:
 | Evento | Comportamiento |
 | --- | --- |
 | **Crear producto** | `POST /api/products` → draft (`status: inactive`, `isAvailable: false`, `image: null`). |
-| **Subir imagen** | Presign (`products/{id}/{uuid}.{ext}`) → PUT directo → `PATCH` confirma `imageKey`. La confirmación **no activa** el producto. |
+| **Subir imagen** | Presign (`products/{id}/{uuid}.{ext}`) → PUT directo → `PATCH` confirma `imageKey` (**solo `imageKey` se persiste**; `image` se deriva vía `resolveProductImageUrl`). La confirmación **no activa** el producto. |
 | **Activación** | `PATCH /api/products/:id { status: "active", isAvailable: true }` — explícita. |
-| **Reemplazar imagen** | Nuevo presign (nueva key versionada) → PUT → `PATCH imageKey` → se elimina la anterior después del éxito de Mongo. |
+| **Reemplazar imagen** | Nuevo presign (nueva key versionada) → PUT → `PATCH imageKey` (**actualiza solo `imageKey`**; `image` se recalcula) → se elimina la anterior después del éxito de Mongo. |
 | **Confirm OK pero Mongo falla** | La imagen anterior sigue vigente; el objeto nuevo queda huérfano y lo elimina el job (regla 24 h). |
 | **Eliminar producto** | `DELETE` borra documento + inventario + prefijo `products/{id}/` vía `deletePrefix` (best-effort) + job como respaldo. |
 | **Upload abandonado** | El objeto queda en `pending/` o sin confirmar; lo elimina el job (regla 1 h / 24 h). |

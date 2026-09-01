@@ -10,6 +10,7 @@ import { NotFoundError } from "../../../shared/errors/not-found.error";
 import { InvalidDataError } from "../../../shared/errors/invalid-data.error";
 import { canTransitionOrderStatus, canTransitionPaymentStatus } from "../../../shared/constants/order-status";
 import { isValidObjectId } from "../../../shared/utils/mongo";
+import { resolveProductImageUrl } from "../../../shared/utils/resolve-product-image";
 import { generateOrderNumber } from "../utils/order-number";
 import { ORDER_SORT_FIELDS } from "../constants/order-sort-fields";
 import type {
@@ -158,7 +159,7 @@ export const create = async (userId: string, addressId: string, idempotencyKey?:
       price: item.unitPrice ?? product.price,
       originalPrice: item.originalPrice,
       discountPercentage: item.discountPercentage,
-      image: product.image ?? "",
+      image: resolveProductImageUrl(product) ?? "",
       unit: product.unit,
       unitQuantity: product.unitQuantity,
       quantity: item.quantity,
