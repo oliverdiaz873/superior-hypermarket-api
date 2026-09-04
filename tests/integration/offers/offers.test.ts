@@ -1,4 +1,4 @@
-import request from "supertest";
+﻿import request from "supertest";
 import app from "../../../src/app";
 import { OfferModel } from "../../../src/modules/offers/models/offer.model";
 import { createTestProduct } from "../helpers/product.helper";
@@ -7,7 +7,7 @@ import { createAuthHeaders, createAuthToken } from "../helpers/auth.helper";
 import { createTestAdmin } from "../helpers/user.helper";
 import type { User } from "../../../src/types";
 
-describe("E2E: /api/offers visibilidad pública (F2)", () => {
+describe("E2E: /api/offers visibilidad pÃºblica (F2)", () => {
   let admin: User;
   let adminHeaders: { Authorization: string };
 
@@ -16,7 +16,7 @@ describe("E2E: /api/offers visibilidad pública (F2)", () => {
     adminHeaders = createAuthHeaders(createAuthToken(admin));
   });
 
-  it("solo devuelve ofertas de productos públicamente visibles (status + isAvailable)", async () => {
+  it("solo devuelve ofertas de productos pÃºblicamente visibles (status + isAvailable)", async () => {
     const visible = await createTestProduct({ name: "Oferta Visible", status: "active", isAvailable: true });
     const hiddenInactive = await createTestProduct({ name: "Oferta Inactiva", status: "inactive", isAvailable: false });
 
@@ -32,7 +32,7 @@ describe("E2E: /api/offers visibilidad pública (F2)", () => {
     expect(ids).not.toContain(hiddenInactive.id);
   });
 
-  it("un draft de producto no aparece en ofertas; al activarlo sí", async () => {
+  it("un draft de producto no aparece en ofertas; al activarlo sÃ­", async () => {
     const draft = await createTestProduct({ name: "Draft Oferta", status: "inactive", isAvailable: false });
     await createTestOffer(draft.id);
 
@@ -68,7 +68,7 @@ describe("E2E: /api/offers visibilidad pública (F2)", () => {
     expect(res.body.data.map((o: { id: string }) => o.id)).not.toContain(product.id);
   });
 
-  it("shape del contrato F2: sin priceLabel, sin claves internas, imagen pública", async () => {
+  it("shape del contrato F2: sin priceLabel, sin claves internas, imagen pÃºblica", async () => {
     const product = await createTestProduct({ name: "Oferta Shape", status: "active", isAvailable: true });
     await createTestOffer(product.id);
 
@@ -84,7 +84,7 @@ describe("E2E: /api/offers visibilidad pública (F2)", () => {
       discountPercentage: 20,
       categoryId: "cat_granos",
     });
-    expect(item.image).toBe("https://example.com/arroz.png");
+    expect(item.image).toContain("https://example.com/arroz.png");
     expect(item).not.toHaveProperty("priceLabel");
     expect(item).not.toHaveProperty("translations");
     expect(item).not.toHaveProperty("imageKey");
@@ -109,7 +109,7 @@ describe("E2E: /api/offers visibilidad pública (F2)", () => {
     expect(item).not.toHaveProperty("translations");
   });
 
-  it("productos huérfanos (oferta sin producto) se excluyen en silencio", async () => {
+  it("productos huÃ©rfanos (oferta sin producto) se excluyen en silencio", async () => {
     await OfferModel.create({
       productId: "prod_inexistente",
       originalPrice: 100,

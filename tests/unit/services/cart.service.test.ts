@@ -15,16 +15,33 @@ jest.mock("../../../src/modules/products/repositories/product.repository", () =>
 jest.mock("../../../src/modules/offers/repositories/offer.repository", () =>
   require("../mocks/repositories").mockOfferRepository
 );
+jest.mock("../../../src/shared/storage/storage.factory", () => ({
+  getStorageProvider: jest.fn(),
+}));
 
 import {
   mockCartRepository,
   mockProductRepository,
   mockOfferRepository,
 } from "../mocks/repositories";
+import { getStorageProvider } from "../../../src/shared/storage/storage.factory";
+
+const getStorageProviderMock = getStorageProvider as jest.Mock;
+const storageProviderMock = {
+  name: "local",
+  getPresignedUploadUrl: jest.fn(),
+  getPublicUrl: jest.fn((key: string) => `https://cdn.test/${key}`),
+  objectExists: jest.fn(),
+  inspectImage: jest.fn(),
+  listObjects: jest.fn(),
+  deleteObject: jest.fn(),
+  deletePrefix: jest.fn(),
+};
 
 describe("cart.service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    getStorageProviderMock.mockReturnValue(storageProviderMock);
     mockOfferRepository.findActiveByProductId.mockResolvedValue(null);
   });
 
@@ -37,23 +54,43 @@ describe("cart.service", () => {
 
       expect(mockCartRepository.findByUserId).toHaveBeenCalledWith(USER_ID);
       expect(mockCartRepository.createCart).not.toHaveBeenCalled();
-      expect(result.items).toEqual([
-        {
-          productId: PRODUCT_ID,
-          name: "Arroz 1kg",
-          price: 89.5,
-          unitPrice: 89.5,
-          originalPrice: undefined,
-          discountPercentage: undefined,
-          isOffer: false,
-          quantity: 2,
-          image: "https://example.com/arroz.png",
-          unit: "kg",
-          unitQuantity: 1,
-        },
-      ]);
+      expect(result.items[0]).toMatchObject({
+        productId: PRODUCT_ID,
+        name: "Arroz 1kg",
+        price: 89.5,
+        unitPrice: 89.5,
+        originalPrice: undefined,
+        discountPercentage: undefined,
+        isOffer: false,
+        quantity: 2,
+        unit: "kg",
+        unitQuantity: 1,
+      });
+      expect(result.items[0].image).toContain("https://example.com/arroz.png");
+      expect(result.items[0].image).toContain("?v=");
       expect(result.totalItems).toBe(2);
       expect(result.subtotal).toBe(179);
+    });
+
+    it("resuelve imageKey a URL pública (fix 0012: imageKey como fuente de verdad)", async () => {
+      mockCartRepository.findByUserId.mockResolvedValue(makeCart());
+      mockProductRepository.findById.mockResolvedValue(
+        makeProduct({ image: undefined, imageKey: "products/tablets/tablet-tcl.png" })
+      );
+
+      const result = await cartService.getCart(USER_ID);
+
+      expect(storageProviderMock.getPublicUrl).toHaveBeenCalledWith("products/tablets/tablet-tcl.png");
+      expect(result.items[0].image).toBe(`https://cdn.test/products/tablets/tablet-tcl.png?v=${encodeURIComponent(new Date("2026-01-01T00:00:00.000Z").toISOString())}`);
+    });
+
+    it("retorna image vacío cuando el producto no tiene imageKey ni image pública", async () => {
+      mockCartRepository.findByUserId.mockResolvedValue(makeCart());
+      mockProductRepository.findById.mockResolvedValue(makeProduct({ image: undefined, imageKey: undefined }));
+
+      const result = await cartService.getCart(USER_ID);
+
+      expect(result.items[0].image).toBe("");
     });
 
     it("item legacy (sin snapshot) con oferta activa usa el precio de oferta del server", async () => {

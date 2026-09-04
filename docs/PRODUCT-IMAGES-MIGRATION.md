@@ -25,15 +25,15 @@ de una migración masiva.
    storefronts siguen sirviendo sus datos estáticos e imágenes locales
    (`useMockData=true`).
 2. **Script de migración** `scripts/migrate-images.ts` (backend):
-   - Lee el catálogo legacy (el mismo que ya usa la seed: 184 productos con `id`).
-   - Localiza cada asset local (Angular `public/` / Next.js `public/`) — son el
-     mismo conjunto.
-   - Sube cada archivo a `products/{id}/{uuid}.{ext}` (key versionada como en la
-     tubería nueva; preservando el formato
-     original; conversión opcional a WebP en una fase posterior).
-   - Actualiza en MongoDB: `image` (URL pública R2/CDN) e `imageKey`.
-   - Registra en un log los éxitos/fallos y es **idempotente** (no re-subir si ya
-     existe la key).
+    - Lee el catálogo legacy (el mismo que ya usa la seed: 184 productos con `id`).
+    - Localiza cada asset local (Angular `public/` / Next.js `public/`) — son el
+      mismo conjunto.
+    - Sube cada archivo a `products/{id}/{uuid}.{ext}` (key versionada como en la
+      tubería nueva; preservando el formato
+      original; conversión opcional a WebP en una fase posterior).
+    - Actualiza en MongoDB: **solo `imageKey`** (`products/{id}/{uuid}.{ext}`); `image` **no se persiste** desde `0012-normalize-product-image-key` y se deriva en runtime vía `src/shared/utils/resolve-product-image.ts` (`storageProvider.getPublicUrl(imageKey)` + `?v={updatedAt}`). Ver `src/database/migrations/0012-normalize-product-image-key.ts`.
+    - Registra en un log los éxitos/fallos y es **idempotente** (no re-subir si ya
+      existe la key).
 3. **Verificación post-migración:**
    - `GET /api/products` devuelve las 184 URLs de R2.
    - Angular Store y Next.js renderizan las imágenes desde el CDN
@@ -58,12 +58,13 @@ de una migración masiva.
 - Se ejecuta con los mismos controles de seguridad del presign (MIME allowlist,
   tamaño) aunque el origen sea de confianza.
 
-## 5. Criterios de aceptación (F7)
+## 5. Criterios de aceptación (F7) — Actualizado tras 0012
 
-- 184/184 productos con `image` apuntando a R2/CDN.
-- 184/184 assets verificables en ambos storefronts.
-- `orphan-cleanup.ts` no marca como huérfano ningún `products/{id}/`.
+- 184/184 productos con **`imageKey`** (`products/{id}/{uuid}.{ext}`) persistido; `image` (URL pública R2/CDN con `?v={updatedAt}`) **derivado** vía `resolveProductImageUrl` (Cart, Orders y Product API resuelven igual).
+- 184/184 assets verificables en ambos storefronts (URL resuelta contiene `/uploads/...` o `https://...` + `?v=`).
+- `orphan-cleanup.ts` no marca como huérfano ningún `products/{id}/` (Mongo fuente de verdad es `imageKey`).
 - Cero imágenes locales referenciadas en código de producción (solo tests/mock).
+- Fallback legacy: `image` ya público (`/uploads/...` o `http...`) se preserva con `?v=`; `image: "products/..."` sin `imageKey` resuelve a `null` (no reintroduce bug Cart/Orders).
 
 ## 6. Referencias
 

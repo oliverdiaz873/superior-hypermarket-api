@@ -49,6 +49,7 @@ export const mapProduct = (
 
   const subcategory = entry?.subcategory ?? null;
 
+  // imageKey como única fuente de verdad; image se deriva en presenter, no se persiste
   return {
     _id: raw.id,
     sku: `sku-${raw.id}`,
@@ -56,7 +57,7 @@ export const mapProduct = (
     description: `Detalle de ${raw.name}`,
     translations: en ? { en } : undefined,
     price: raw.price,
-    image: raw.image,
+    imageKey: raw.image,
     categoryId: parentCategory.id,
     subcategoryId: subcategory ? subcategory.slug : null,
     category: {

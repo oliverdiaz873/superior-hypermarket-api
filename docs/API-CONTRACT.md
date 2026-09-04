@@ -446,6 +446,33 @@ Obtiene productos con descuento activo. Comportamiento F2:
 > `discountPercentage` son **números**, no strings. `image` puede ser `null`
 > si el producto no tiene imagen resoluble.
 
+### GET /api/admin/offers (admin)
+
+Requiere `Authorization: Bearer <token>` con rol `admin`. Lista **todas** las ofertas (activas, inactivas y expiradas) con el nombre del producto resuelto para el Dashboard (`productName`).
+
+**Response (`AdminOffer`):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "6a90c8fe-...",
+      "productId": "58c36965-...",
+      "productName": "Manzanas verdes por libras",
+      "originalPrice": 56,
+      "discountPrice": 45,
+      "startDate": "2026-08-08T10:00:00.000Z",
+      "endDate": null,
+      "isActive": true,
+      "title": "Mi oferta"
+    }
+  ]
+}
+```
+
+> **Ofertas huérfanas:** si `productId` referencia un producto eliminado por *soft delete* (`isDeleted:true`), `productRepository.findByIds()` lo excluye y `listAll()` resuelve `productName` como `"Producto eliminado"` (`src/modules/offers/services/offer.service.ts:38` `?? "Producto eliminado"`). El listado administrativo conserva la oferta por trazabilidad; el público `GET /api/offers` la filtra (`src/modules/offers/services/offer.service.ts:48` `!product || !isPubliclyVisible → null`). Ver `docs/OFFERS-LIFECYCLE.md` para ciclo de vida completo y consideraciones futuras.
+
 ---
 
 ## 8. Search API

@@ -3,6 +3,7 @@ import * as productRepository from "../../products/repositories/product.reposito
 import * as offerRepository from "../../offers/repositories/offer.repository";
 import { NotFoundError } from "../../../shared/errors/not-found.error";
 import { InvalidDataError } from "../../../shared/errors/invalid-data.error";
+import { resolveProductImageUrl } from "../../../shared/utils/resolve-product-image";
 import type { CartItem, CartItemStored, CartResponse, Product } from "../../../types";
 
 const computeDiscountPercentage = (originalPrice: number, discountPrice: number): number =>
@@ -57,7 +58,7 @@ const resolveItem = async (item: CartItemStored): Promise<CartItem | null> => {
     discountPercentage,
     isOffer: originalPrice !== undefined && originalPrice > unitPrice,
     quantity: item.quantity,
-    image: product.image ?? "",
+    image: resolveProductImageUrl(product) ?? "",
     unit: product.unit,
     unitQuantity: product.unitQuantity,
   };

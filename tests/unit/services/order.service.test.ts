@@ -8,6 +8,7 @@ import { makeProduct, PRODUCT_ID } from "../factories/product.factory";
 import { makeAddress } from "../factories/address.factory";
 import { makeInventory } from "../factories/inventory.factory";
 import { USER_ID, makeUser } from "../factories/user.factory";
+import { getStorageProvider } from "../../../src/shared/storage/storage.factory";
 
 const SECOND_PRODUCT_ID = "64b0000000000000000000a2";
 
@@ -29,6 +30,9 @@ jest.mock("../../../src/modules/inventory/services/inventory.service", () =>
 jest.mock("../../../src/modules/users/repositories/user.repository", () =>
   require("../mocks/repositories").mockUserRepository
 );
+jest.mock("../../../src/shared/storage/storage.factory", () => ({
+  getStorageProvider: jest.fn(),
+}));
 
 import {
   mockOrderRepository,
@@ -39,11 +43,24 @@ import {
   mockUserRepository,
 } from "../mocks/repositories";
 
+const getStorageProviderMock = getStorageProvider as jest.Mock;
+const storageProviderMock = {
+  name: "local",
+  getPresignedUploadUrl: jest.fn(),
+  getPublicUrl: jest.fn((key: string) => `https://cdn.test/${key}`),
+  objectExists: jest.fn(),
+  inspectImage: jest.fn(),
+  listObjects: jest.fn(),
+  deleteObject: jest.fn(),
+  deletePrefix: jest.fn(),
+};
+
 const { id: _id, userId: _userId, isDefault: _isDefault, ...shippingAddress } = makeAddress();
 
 describe("order.service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    getStorageProviderMock.mockReturnValue(storageProviderMock);
   });
 
   describe("create", () => {
@@ -107,10 +124,19 @@ describe("order.service", () => {
 
       const result = await orderService.create(USER_ID, "address-id", "it-key");
 
-      const expectedItems = [{ productId: PRODUCT_ID, name: "Arroz 1kg", price: 89.5, image: "https://example.com/arroz.png", unit: "kg", unitQuantity: 1, quantity: 2 }];
       expect(mockOrderRepository.create).toHaveBeenCalledWith(
         USER_ID,
-        expectedItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            productId: PRODUCT_ID,
+            name: "Arroz 1kg",
+            price: 89.5,
+            image: expect.stringContaining("https://example.com/arroz.png"),
+            unit: "kg",
+            unitQuantity: 1,
+            quantity: 2,
+          }),
+        ]),
         2,
         179,
         shippingAddress,
@@ -118,6 +144,8 @@ describe("order.service", () => {
         "it-key",
         expect.stringMatching(/^HM-\d{8}-[A-F0-9]{6}$/)
       );
+      const createdImage = (mockOrderRepository.create.mock.calls[0][1] as Array<{ image: string }>)[0].image;
+      expect(createdImage).toContain("?v=");
       expect(mockInventoryService.reserveForOrder).toHaveBeenCalledWith(
         [{ productId: PRODUCT_ID, quantity: 2, name: "Arroz 1kg" }],
         order.id,
@@ -154,7 +182,16 @@ describe("order.service", () => {
 
       expect(mockOrderRepository.create).toHaveBeenCalledWith(
         USER_ID,
-        [{ productId: PRODUCT_ID, name: "Arroz 1kg", price: 80, originalPrice: 100, discountPercentage: 20, image: "https://example.com/arroz.png", unit: "kg", unitQuantity: 1, quantity: 2 }],
+        expect.arrayContaining([
+          expect.objectContaining({
+            productId: PRODUCT_ID,
+            price: 80,
+            originalPrice: 100,
+            discountPercentage: 20,
+            image: expect.stringContaining("https://example.com/arroz.png"),
+            quantity: 2,
+          }),
+        ]),
         2,
         160,
         shippingAddress,
@@ -162,6 +199,24 @@ describe("order.service", () => {
         "it-key",
         expect.stringMatching(/^HM-\d{8}-[A-F0-9]{6}$/)
       );
+    });
+
+    it("resuelve imageKey a URL pública para OrderItem (fix 0012)", async () => {
+      const order = makeOrder();
+      mockCartRepository.findByUserId.mockResolvedValue(makeCart());
+      mockAddressRepository.findById.mockResolvedValue(makeAddress());
+      mockProductRepository.findByIds.mockResolvedValue([
+        makeProduct({ image: undefined, imageKey: "products/tablets/tablet-tcl.png" }),
+      ]);
+      mockInventoryService.reserveForOrder.mockResolvedValue(undefined);
+      mockOrderRepository.create.mockResolvedValue(order);
+      mockCartRepository.clearCart.mockResolvedValue(true);
+
+      await orderService.create(USER_ID, "address-id", "it-key");
+
+      expect(storageProviderMock.getPublicUrl).toHaveBeenCalledWith("products/tablets/tablet-tcl.png");
+      const createdImage = (mockOrderRepository.create.mock.calls[0][1] as Array<{ image: string }>)[0].image;
+      expect(createdImage).toBe(`https://cdn.test/products/tablets/tablet-tcl.png?v=${encodeURIComponent(new Date("2026-01-01T00:00:00.000Z").toISOString())}`);
     });
 
     it("hace rollback liberando reservas y eliminando la orden si falla la reserva", async () => {
