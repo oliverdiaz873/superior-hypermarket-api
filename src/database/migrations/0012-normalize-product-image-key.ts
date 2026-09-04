@@ -41,7 +41,8 @@ const migration: Migration = {
         skipped++;
         continue;
       }
-      const key = typeof image === "string" && image.startsWith("/") ? image.slice(1) : (image as string);
+      const key =
+        typeof image === "string" && image.startsWith("/") ? image.slice(1) : (image as string);
       // Validación mínima de key segura (products/... con 2-3 segmentos)
       if (!key.startsWith("products/") || key.includes("..") || key.includes("\\")) {
         unresolved++;
@@ -58,7 +59,7 @@ const migration: Migration = {
           $unset: {
             image: 1,
           },
-        }
+        },
       );
       migrated++;
     }
@@ -73,19 +74,25 @@ const migration: Migration = {
     for await (const doc of modernCursor) {
       const image = (doc as { image?: unknown }).image;
       const imageKey = (doc as { imageKey?: string }).imageKey;
-      if (typeof image === "string" && (image.startsWith("/uploads/") || image.startsWith("http")) && isLegacyImageKey(imageKey)) {
+      if (
+        typeof image === "string" &&
+        (image.startsWith("/uploads/") || image.startsWith("http")) &&
+        isLegacyImageKey(imageKey)
+      ) {
         await products.updateOne(
           { _id: doc._id },
           {
             $unset: { image: 1 },
             $set: { updatedAt: new Date() },
-          }
+          },
         );
         cleanedModern++;
       }
     }
 
-    console.log(`[migrate:0012] Migrados legacy: ${migrated}, omitidos (no legacy): ${skipped}, no resueltos: ${unresolved}, limpiados modernos: ${cleanedModern}`);
+    console.log(
+      `[migrate:0012] Migrados legacy: ${migrated}, omitidos (no legacy): ${skipped}, no resueltos: ${unresolved}, limpiados modernos: ${cleanedModern}`,
+    );
   },
   down: async (db: Db) => {
     const products = db.collection("products");
@@ -107,7 +114,7 @@ const migration: Migration = {
           $unset: {
             imageKey: 1,
           },
-        }
+        },
       );
       reverted++;
     }

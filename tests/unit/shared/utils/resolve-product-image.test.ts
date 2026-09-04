@@ -38,7 +38,10 @@ describe("resolveProductImageUrl", () => {
   it("imageKey sin updatedAt -> URL sin ?v=", () => {
     getStorageProviderMock.mockReturnValue(makeProvider((key) => `https://cdn.test/${key}`));
 
-    const url = resolveProductImageUrl({ imageKey: "products/tablets/tablet-tcl.png", updatedAt: undefined });
+    const url = resolveProductImageUrl({
+      imageKey: "products/tablets/tablet-tcl.png",
+      updatedAt: undefined,
+    });
 
     expect(url).toBe("https://cdn.test/products/tablets/tablet-tcl.png");
   });
@@ -65,7 +68,9 @@ describe("resolveProductImageUrl", () => {
   it("https://...?foo=1 -> URL + &v=", () => {
     const url = resolveProductImageUrl({ image: "https://example.com/arroz.png?foo=1", updatedAt });
 
-    expect(url).toBe(`https://example.com/arroz.png?foo=1&v=${encodeURIComponent(updatedAt.toISOString())}`);
+    expect(url).toBe(
+      `https://example.com/arroz.png?foo=1&v=${encodeURIComponent(updatedAt.toISOString())}`,
+    );
   });
 
   it("/uploads/... -> URL + ?v=", () => {
@@ -76,11 +81,13 @@ describe("resolveProductImageUrl", () => {
 
   it("null/undefined -> null", () => {
     expect(resolveProductImageUrl({ image: undefined, imageKey: undefined, updatedAt })).toBeNull();
-    expect(resolveProductImageUrl({ image: undefined, imageKey: undefined, updatedAt: undefined })).toBeNull();
+    expect(
+      resolveProductImageUrl({ image: undefined, imageKey: undefined, updatedAt: undefined }),
+    ).toBeNull();
     expect(resolveProductImageUrl({} as never)).toBeNull();
   });
 
-  it('products/... sin imageKey -> null (no reintroduce bug legacy)', () => {
+  it("products/... sin imageKey -> null (no reintroduce bug legacy)", () => {
     const url = resolveProductImageUrl({ image: "products/tablets/tablet-tcl.png", updatedAt });
 
     expect(getStorageProviderMock).not.toHaveBeenCalled();

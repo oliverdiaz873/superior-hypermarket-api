@@ -13,7 +13,9 @@ const cacheBust = (url: string, version?: Date): string => {
   return `${url}${prefix}v=${encodeURIComponent(version.toISOString())}`;
 };
 
-export const resolveProductImageUrl = (product: Pick<Product, "image" | "imageKey" | "updatedAt">): string | null => {
+export const resolveProductImageUrl = (
+  product: Pick<Product, "image" | "imageKey" | "updatedAt">,
+): string | null => {
   if (product.imageKey) {
     try {
       return cacheBust(getStorageProvider().getPublicUrl(product.imageKey), product.updatedAt);
@@ -23,7 +25,10 @@ export const resolveProductImageUrl = (product: Pick<Product, "image" | "imageKe
     }
   }
   // Compat legacy: producto con image ya es URL pública (https://... o /uploads/...)
-  if (product.image && (product.image.startsWith("/uploads/") || product.image.startsWith("http"))) {
+  if (
+    product.image &&
+    (product.image.startsWith("/uploads/") || product.image.startsWith("http"))
+  ) {
     try {
       return cacheBust(product.image, product.updatedAt);
     } catch {

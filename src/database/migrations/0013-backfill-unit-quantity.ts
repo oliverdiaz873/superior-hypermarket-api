@@ -47,12 +47,14 @@ const migration: Migration = {
             unitQuantity: 1,
             updatedAt: new Date(),
           },
-        }
+        },
       );
       migrated++;
     }
 
-    console.log(`[migrate:0013] Migrados (unit -> 1): ${migrated}, omitidos (unit vacío): ${skippedEmpty}`);
+    console.log(
+      `[migrate:0013] Migrados (unit -> 1): ${migrated}, omitidos (unit vacío): ${skippedEmpty}`,
+    );
   },
   down: async (db: Db) => {
     const products = db.collection("products");
@@ -62,7 +64,7 @@ const migration: Migration = {
     // Productos creados explícitamente con 1 también se revertirán, pero es seguro porque 1 es el default de lectura (quantity ?? 1).
     const result = await products.updateMany(
       { unitQuantity: 1, unit: { $type: "string" } },
-      { $unset: { unitQuantity: 1 }, $currentDate: { updatedAt: true } }
+      { $unset: { unitQuantity: 1 }, $currentDate: { updatedAt: true } },
     );
 
     console.log(`[migrate:0013] Revertidos (unset 1): ${result.modifiedCount}`);
